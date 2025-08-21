@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../static/style.css" />
+  <title>Manifest Calculator</title>
+</head>
+<body>
+
+  <header>
+    <h1>Manifest Calculator</h1>
+    <nav>
+      <a href="#" class="active" onclick="showPage('dashboard')">Dashboard</a>
+      <a href="#" onclick="showPage('drivers')">Drivers</a>
+      <a href="#" onclick="showPage('reports')">Reports</a>
+      <a href="#" onclick="showPage('logout')">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Dashboard -->
+    <section id="dashboard" class="page">
+      <h2>Totals of All Drivers</h2>
+      <div class="cards">
+        <div class="card">Day Total: $0</div>
+        <div class="card">Week Total: $0</div>
+        <div class="card">Month Total: $0</div>
+        <div class="card">Year Total: $0</div>
+      </div>
+    </section>
+
+    <!-- Drivers -->
+    <section id="drivers" class="page" style="display:none;">
+      <h2>Driver Information</h2>
+      <label for="driverSelect">Select Driver:</label>
+      <select id="driverSelect">
+        <option value="" disabled selected>Choose...</option>
+        <option value="driver1">Driver 1</option>
+        <option value="driver2">Driver 2</option>
+      </select>
+
+      <div id="driverTotals" style="margin-top:20px;">
+        <p>Day Total: $0</p>
+        <p>Week Total: $0</p>
+        <p>Month Total: $0</p>
+        <p>Year Total: $0</p>
+      </div>
+
+      <button onclick="addManifest()">+ Add Manifest</button>
+    </section>
+
+    <!-- Reports -->
+    <section id="reports" class="page" style="display:none;">
+      <h2>Reports</h2>
+      <p>Generate daily, weekly, or monthly reports here.</p>
+      <button>Export CSV</button>
+    </section>
+
+    <!-- Logout -->
+    <section id="logout" class="page" style="display:none;">
+      <h2>Logout</h2>
+      <p>You have been logged out (placeholder).</p>
+    </section>
+  </div>
+
+  <script src="../static/script.js"></script>
+
+</body>
+</html>
