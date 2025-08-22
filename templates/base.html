@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <title>Manifest Calculator</title>
+</head>
+<body>
+
+  <header>
+    <h1>Manifest Calculator</h1>
+    <nav>
+      <a href="{{ url_for('index') }}" class="{% if active_page=='dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('drivers') }}" class="{% if active_page=='drivers' %}active{% endif %}">Drivers</a>
+      <a href="{{ url_for('reports') }}" class="{% if active_page=='reports' %}active{% endif %}">Reports</a>
+      <a href="{{ url_for('logout') }}" class="{% if active_page=='logout' %}active{% endif %}">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
