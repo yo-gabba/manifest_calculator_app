@@ -12,7 +12,17 @@
     <h1>Manifest Calculator</h1>
     <nav>
       <a href="{{ url_for('index') }}" class="{% if active_page=='dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="{{ url_for('drivers') }}" class="{% if active_page=='drivers' %}active{% endif %}">Drivers</a>
+
+      <!-- Drivers Dropdown -->
+      <div class="dropdown">
+        <a href="#" class="{% if active_page=='drivers' %}active{% endif %}">Drivers ▼</a>
+        <div class="dropdown-content">
+          {% for driver in all_drivers %}
+            <a href="{{ url_for('drivers', driver=driver.id) }}">{{ driver.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+
       <a href="{{ url_for('reports') }}" class="{% if active_page=='reports' %}active{% endif %}">Reports</a>
       <a href="{{ url_for('logout') }}" class="{% if active_page=='logout' %}active{% endif %}">Logout</a>
     </nav>

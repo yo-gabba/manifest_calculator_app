@@ -83,6 +83,10 @@ def calculate_stop_total(miles, pallet_spaces, accessorials=''):
 def index():
     return render_template('index.html', active_page='dashboard')
 
+@app.context_processor
+def inject_drivers():
+    all_drivers = Driver.query.order_by(Driver.name).all()
+    return dict(all_drivers=all_drivers)
 
 @app.route('/drivers', methods=['GET', 'POST'])
 def drivers():
