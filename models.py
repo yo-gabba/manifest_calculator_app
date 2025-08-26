@@ -14,19 +14,29 @@ class Driver(db.Model):
 
 # Manifest model
 class Manifest(db.Model):
-    __tablename__ = 'manifest'
-
     id = db.Column(db.Integer, primary_key=True)
     driver_id = db.Column(db.Integer, db.ForeignKey('driver.id'), nullable=False)
-    driver = db.relationship('Driver', back_populates='manifests')  # <-- only back_populates
-
-    # Daily Info
     date = db.Column(db.Date, nullable=False)
-    start_odometer = db.Column(db.Float, nullable=False)
-    end_odometer = db.Column(db.Float, nullable=False)
-    total_miles = db.Column(db.Float, nullable=False)  # calculated field : end - start
+    start_odometer = db.Column(db.Integer)
+    end_odometer = db.Column(db.Integer)
+    total_miles = db.Column(db.Integer)
+    day_total = db.Column(db.Float)  # sum of all stops
+    driver = db.relationship('Driver', back_populates='manifests')
+    stops = db.relationship('Stop', back_populates='manifest', cascade="all, delete-orphan")
 
-    # Payment Info
-    weekly_rate = db.Column(db.Float, nullable=True)   # gas rate per mile
-    payback_percentage = db.Column(db.Float, nullable=True)
-    payback_amount = db.Column(db.Float, nullable=True)  # calculated
+# Stop model
+class Stop(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    manifest_id = db.Column(db.Integer, db.ForeignKey('manifest.id'), nullable=False)
+    type = db.Column(db.String(20))   # Delivery / Pickup
+    city = db.Column(db.String(100))
+    zip_code = db.Column(db.String(10))
+    zone = db.Column(db.String(5))
+    pallets = db.Column(db.Integer)
+    pallet_spaces = db.Column(db.Float)
+    miles = db.Column(db.Float, default=0.0)
+    rate = db.Column(db.Float)        # lookup from zone table
+    accessorials = db.Column(db.String(200))
+    total = db.Column(db.Float)       # rate + extras
+    manifest = db.relationship('Manifest', back_populates='stops')
+

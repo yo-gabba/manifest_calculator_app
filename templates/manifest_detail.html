@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Manifest for {{ manifest.date.strftime('%m/%d/%Y') }} - Driver: {{ manifest.driver.name }}</h2>
+<form method="POST" action="{{ url_for('delete_manifest', manifest_id=manifest.id) }}" 
+      onsubmit="return confirm('Are you sure you want to delete this entire manifest and all its stops?');">
+    <button type="submit" class="btn btn-danger">Delete Manifest</button>
+</form>
+<p><strong>Start Odometer:</strong> {{ manifest.start_odometer }} | 
+   <strong>End Odometer:</strong> {{ manifest.end_odometer }} | 
+   <strong>Total Miles:</strong> {{ manifest.total_miles }} | 
+   <strong>Day Total ($):</strong> {{ manifest.day_total }}</p>
+
+<!-- Add Stop Form -->
+<h3>Add Stop</h3>
+<form method="POST" action="{{ url_for('add_stop', manifest_id=manifest.id) }}">
+    <label>Type:</label>
+    <select name="type">
+        <option value="DELIVERY">Delivery</option>
+        <option value="PICKUP">Pickup</option>
+    </select><br>
+
+    <label>City:</label>
+    <input type="text" name="city" required><br>
+
+    <label>Zip Code:</label>
+    <input type="text" name="zip_code" required><br>
+
+    <label>Miles for this stop:</label>
+    <input type="number" step="0.1" name="miles" required><br>
+
+    <label>Pallets:</label>
+    <input type="number" name="pallets" required><br>
+
+    <label>Pallet Spaces:</label>
+    <input type="number" step="0.5" name="pallet_spaces" required><br>
+
+    <label>Accessorials:</label>
+    <input type="text" name="accessorials" placeholder="Oversized, Liftgate, Residential"><br>
+
+    <button type="submit">Add Stop</button>
+</form>
+
+<!-- Stops Table -->
+<h3>Stops</h3>
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>City</th>
+            <th>Zip</th>
+            <th>Zone</th>
+            <th>Pallets</th>
+            <th>Pallet Spaces</th>
+            <th>Rate</th>
+            <th>Accessorials</th>
+            <th>Total ($)</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stop in stops %}
+        <tr>
+            <td>{{ stop.id }}</td>
+            <td>{{ stop.type }}</td>
+            <td>{{ stop.city }}</td>
+            <td>{{ stop.zip_code }}</td>
+            <td>{{ stop.zone }}</td>
+            <td>{{ stop.pallets }}</td>
+            <td>{{ stop.pallet_spaces }}</td>
+            <td>{{ stop.rate }}</td>
+            <td>{{ stop.accessorials }}</td>
+            <td>{{ stop.total }}</td>
+            <td>
+                <!-- Edit button -->
+                <a href="{{ url_for('edit_stop', stop_id=stop.id, manifest_id=manifest.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <!-- Delete button -->
+                <form method="POST" action="{{ url_for('delete_stop', stop_id=stop.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this stop?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

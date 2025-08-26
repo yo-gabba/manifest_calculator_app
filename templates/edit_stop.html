@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Edit Stop</h2>
+<form method="POST">
+  <div>
+    <label>Type</label>
+    <select name="type">
+        <option value="DELIVERY" {% if stop.type == "DELIVERY" %}selected{% endif %}>Delivery</option>
+        <option value="PICKUP" {% if stop.type == "PICKUP" %}selected{% endif %}>Pickup</option>
+    </select>
+  </div>
+  <div>
+    <label>City</label>
+    <input type="text" name="city" value="{{ stop.city }}" required>
+  </div>
+  <div>
+    <label>Zip Code</label>
+    <input type="text" name="zip_code" value="{{ stop.zip_code }}" required>
+  </div>
+  <div>
+    <label>Pallets</label>
+    <input type="number" name="pallets" value="{{ stop.pallets }}" required>
+  </div>
+  <div>
+    <label>Pallet Spaces</label>
+    <input type="number" step="0.5" name="pallet_spaces" value="{{ stop.pallet_spaces }}" required>
+  </div>
+  <div>
+    <label>Miles</label>
+    <input type="number" step="0.1" name="miles" value="{{ stop.miles }}" required>
+  </div>
+  <div>
+    <label>Accessorials</label>
+    <input type="text" name="accessorials" value="{{ stop.accessorials }}">
+  </div>
+  <button type="submit" class="btn btn-success">Save</button>
+  <a href="{{ url_for('manifest_detail', manifest_id=manifest_id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
