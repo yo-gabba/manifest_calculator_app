@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import datetime, timedelta
-from models import db, Driver, Manifest, Stop
+from models import db, Driver, Manifest, Stop, ZipZone
 from sqlalchemy import func
 import os
+
 
 app = Flask(__name__)
 
@@ -151,20 +152,36 @@ def manifest_detail(manifest_id):
     return render_template('manifest_detail.html', manifest=manifest, stops=stops, active_page='drivers')
 
 
+from models import db, Stop, Manifest, ZipZone
+from sqlalchemy import func
+
 @app.route('/manifest/<int:manifest_id>/stops', methods=['POST'])
 def add_stop(manifest_id):
     manifest = Manifest.query.get_or_404(manifest_id)
-    miles = float(request.form.get('miles', 0))
+
+    # Grab form data
+    zip_code = request.form.get('zip_code', '')
     pallet_spaces = float(request.form.get('pallet_spaces', 0))
     accessorials = request.form.get('accessorials', '')
 
-    freight_total, total, zone = calculate_stop_total(miles, pallet_spaces, accessorials)
+    # Try to look up miles + zone from ZipZone
+    zone_entry = ZipZone.query.filter_by(zip_code=zip_code).first()
+    if zone_entry:
+        miles = zone_entry.miles_from_warehouse
+        zone = zone_entry.zone
+    else:
+        miles = float(request.form.get('miles', 0))
+        zone = None  # will be set by calculate_stop_total
+
+    # Calculate freight/total with given or looked-up miles
+    freight_total, total, calc_zone = calculate_stop_total(miles, pallet_spaces, accessorials)
+    zone = zone or calc_zone  # prefer DB zone, otherwise use calculated
 
     stop = Stop(
         manifest_id=manifest_id,
         type=request.form.get('type', ''),
         city=request.form.get('city', ''),
-        zip_code=request.form.get('zip_code', ''),
+        zip_code=zip_code,
         zone=zone,
         pallets=int(request.form.get('pallets', 0)),
         pallet_spaces=pallet_spaces,
@@ -177,9 +194,11 @@ def add_stop(manifest_id):
     db.session.flush()
 
     # Recalculate manifest day_total
-    manifest.day_total = db.session.query(func.coalesce(func.sum(Stop.total), 0.0)).filter_by(manifest_id=manifest_id).scalar()
+    manifest.day_total = db.session.query(func.coalesce(func.sum(Stop.total), 0.0))\
+        .filter_by(manifest_id=manifest_id).scalar()
     db.session.commit()
     return redirect(url_for('manifest_detail', manifest_id=manifest_id))
+
 
 @app.route('/stops/<int:stop_id>/edit', methods=['GET', 'POST'])
 def edit_stop(stop_id):
@@ -193,12 +212,18 @@ def edit_stop(stop_id):
         stop.pallets = int(request.form.get('pallets', stop.pallets))
         stop.pallet_spaces = float(request.form.get('pallet_spaces') or stop.pallet_spaces)
         stop.accessorials = request.form.get('accessorials', stop.accessorials)
-        miles = float(request.form.get('miles', stop.miles))
+
+        # Check ZipZone first
+        zone_entry = ZipZone.query.filter_by(zip_code=stop.zip_code).first()
+        if zone_entry:
+            stop.miles = zone_entry.miles_from_warehouse
+            stop.zone = zone_entry.zone
+        else:
+            stop.miles = float(request.form.get('miles') or stop.miles)
 
         # Recalculate rates
-        stop.miles = miles
-        freight_total, total, zone = calculate_stop_total(miles, stop.pallet_spaces, stop.accessorials)
-        stop.zone = zone
+        freight_total, total, calc_zone = calculate_stop_total(stop.miles, stop.pallet_spaces, stop.accessorials)
+        stop.zone = stop.zone or calc_zone
         stop.rate = freight_total
         stop.total = total
 
@@ -226,6 +251,18 @@ def delete_stop(stop_id):
     manifest.day_total = new_total
     db.session.commit()
     return redirect(url_for('manifest_detail', manifest_id=manifest_id))
+
+
+@app.route('/zip_lookup/<zip_code>')
+def zip_lookup(zip_code):
+    zone_entry = ZipZone.query.filter_by(zip_code=zip_code).first()
+    if zone_entry:
+        return jsonify({
+            'miles': zone_entry.miles,
+            'zone': zone_entry.zone
+        })
+    return jsonify({'miles': '', 'zone': ''})
+
 
 
 @app.route('/reports')

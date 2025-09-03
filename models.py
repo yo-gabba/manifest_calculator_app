@@ -40,3 +40,13 @@ class Stop(db.Model):
     total = db.Column(db.Float)       # rate + extras
     manifest = db.relationship('Manifest', back_populates='stops')
 
+# Zip Codes model
+class ZipZone(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    zip_code = db.Column(db.String(10), unique=True, nullable=False)
+    miles_from_warehouse = db.Column(db.Float, nullable=False)
+    zone = db.Column(db.String(5), nullable=False)
+
+    def __repr__(self):
+        return f"<ZipZone {self.zip_code} - {self.zone}>"
+

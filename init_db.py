@@ -1,6 +1,6 @@
 from app import app
-from models import db, Driver
-import os
+from models import db, Driver, ZipZone
+import os, csv
 
 db_path = 'instance/manifest.db'
 
@@ -23,3 +23,19 @@ with app.app_context():
     
     db.session.commit()
     print(f"Added sample drivers: {', '.join(sample_drivers)}")
+
+    # Import ZipZones from CSV
+    csv_file = "zipzones.csv"  # put this file in your project root
+    with open(csv_file, newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if not ZipZone.query.filter_by(zip_code=row['zip_code']).first():
+                zone = ZipZone(
+                    zip_code=row['zip_code'],
+                    miles_from_warehouse=float(row['miles_from_warehouse']),
+                    zone=row['zone']
+                )
+                db.session.add(zone)
+
+        db.session.commit()
+    print("Imported zip zones from CSV.")
