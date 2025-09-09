@@ -12,33 +12,37 @@
 
 <!-- Add Stop Form -->
 <h3>Add Stop</h3>
-<form method="POST" action="{{ url_for('add_stop', manifest_id=manifest.id) }}">
+<form id="add-stop-form" method="POST" action="{{ url_for('add_stop', manifest_id=manifest.id) }}">
     <label>Type:</label>
-    <select name="type">
+    <select name="type" id="stop-type">
         <option value="DELIVERY">Delivery</option>
         <option value="PICKUP">Pickup</option>
     </select><br>
 
     <label>City:</label>
-    <input type="text" name="city" required><br>
+    <input type="text" name="city" id="stop-city" required><br>
 
     <label>Zip Code:</label>
-    <input type="text" name="zip_code" required><br>
+    <input type="text" name="zip_code" id="stop-zip" required><br>
 
     <label>Miles for this stop:</label>
-    <input type="number" step="0.1" name="miles"><br>
+    <input type="number" step="0.1" name="miles" id="stop-miles"><br>
 
     <label>Pallets:</label>
-    <input type="number" name="pallets" required><br>
+    <input type="number" name="pallets" id="stop-pallets" required><br>
 
     <label>Pallet Spaces:</label>
-    <input type="number" step="0.5" name="pallet_spaces" required><br>
+    <input type="number" step="0.5" name="pallet_spaces" id="stop-pallet-spaces" required><br>
 
     <label>Accessorials:</label>
-    <input type="text" name="accessorials" placeholder="Oversized, Liftgate, Residential"><br>
+    <input type="text" name="accessorials" id="stop-accessorials" placeholder="Oversized, Liftgate, Residential"><br>
+
+    <!-- Live preview -->
+    <p><strong>Preview Total: $<span id="preview-total">0.00</span></strong> (Rate: $<span id="preview-rate">0.00</span>, Zone: <span id="preview-zone">-</span>)</p>
 
     <button type="submit">Add Stop</button>
 </form>
+
 
 <!-- Stops Table -->
 <h3>Stops</h3>

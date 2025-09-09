@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 from datetime import datetime, timedelta
 from models import db, Driver, Manifest, Stop, ZipZone
 from sqlalchemy import func
@@ -70,13 +70,30 @@ def get_zone(miles):
     return None
 
 def calculate_stop_total(miles, pallet_spaces, accessorials=''):
+    """
+    Calculate freight and total charges for a stop.
+    - Look up zone from miles.
+    - Base = STOP_RATES[zone] + PALLET_RATES[zone] * pallet_spaces
+    - Add accessorial charges.
+    Returns (freight_total, total, zone).
+    """
     zone = get_zone(miles)
     if not zone:
-        return 0.0, 0.0, ''
-    freight_total = STOP_RATES[zone] + (PALLET_RATES[zone] * pallet_spaces)
-    accessorial_total = sum(val for key, val in ACCESSORIAL_RATES.items() if key.lower() in accessorials.lower())
-    total = accessorial_total + freight_total
+        return 0.0, 0.0, ''  # no valid zone, no charges
+
+    # Base freight
+    freight_total = STOP_RATES.get(zone, 0) + (PALLET_RATES.get(zone, 0) * float(pallet_spaces or 0))
+
+    # Accessorial charges
+    accessorial_total = 0.0
+    if accessorials:
+        for key, val in ACCESSORIAL_RATES.items():
+            if key.lower() in accessorials.lower():
+                accessorial_total += val
+
+    total = freight_total + accessorial_total
     return freight_total, total, zone
+
 
 
 # ROUTES 
@@ -152,9 +169,6 @@ def manifest_detail(manifest_id):
     return render_template('manifest_detail.html', manifest=manifest, stops=stops, active_page='drivers')
 
 
-from models import db, Stop, Manifest, ZipZone
-from sqlalchemy import func
-
 @app.route('/manifest/<int:manifest_id>/stops', methods=['POST'])
 def add_stop(manifest_id):
     manifest = Manifest.query.get_or_404(manifest_id)
@@ -200,44 +214,34 @@ def add_stop(manifest_id):
     return redirect(url_for('manifest_detail', manifest_id=manifest_id))
 
 
-@app.route('/stops/<int:stop_id>/edit', methods=['GET', 'POST'])
-def edit_stop(stop_id):
+@app.route("/edit_stop/<int:stop_id>/<int:manifest_id>", methods=["GET", "POST"])
+def edit_stop(stop_id, manifest_id):
     stop = Stop.query.get_or_404(stop_id)
-    manifest_id = stop.manifest_id
 
-    if request.method == 'POST':
-        stop.type = request.form.get('type', stop.type)
-        stop.city = request.form.get('city', stop.city)
-        stop.zip_code = request.form.get('zip_code', stop.zip_code)
-        stop.pallets = int(request.form.get('pallets', stop.pallets))
-        stop.pallet_spaces = float(request.form.get('pallet_spaces') or stop.pallet_spaces)
-        stop.accessorials = request.form.get('accessorials', stop.accessorials)
+    if request.method == "POST":
+        # Update stop fields
+        stop.type = request.form["type"]
+        stop.city = request.form["city"]
+        stop.zip_code = request.form["zip_code"]
+        stop.pallets = request.form["pallets"]
+        stop.pallet_spaces = request.form["pallet_spaces"]
+        stop.accessorials = request.form["accessorials"]
 
-        # Check ZipZone first
-        zone_entry = ZipZone.query.filter_by(zip_code=stop.zip_code).first()
-        if zone_entry:
-            stop.miles = zone_entry.miles_from_warehouse
-            stop.zone = zone_entry.zone
-        else:
-            stop.miles = float(request.form.get('miles') or stop.miles)
+        # If zone is set, we lock miles. If not, update it from form.
+        if not stop.zone:
+            stop.miles = request.form.get("miles", 0)
 
-        # Recalculate rates
-        freight_total, total, calc_zone = calculate_stop_total(stop.miles, stop.pallet_spaces, stop.accessorials)
-        stop.zone = stop.zone or calc_zone
-        stop.rate = freight_total
-        stop.total = total
+        # Recalculate rate + total (assuming you have a helper for this)
+        # Example:
+        stop.rate, stop.total = calculate_rate_and_total(
+            stop.zone, stop.pallets, stop.pallet_spaces, stop.miles, stop.accessorials
+        )
 
         db.session.commit()
+        flash("Stop updated successfully.", "success")
+        return redirect(url_for("manifest_detail", manifest_id=manifest_id))
 
-        # Recalculate manifest day total
-        manifest = Manifest.query.get(manifest_id)
-        manifest.day_total = db.session.query(func.coalesce(func.sum(Stop.total), 0.0))\
-            .filter_by(manifest_id=manifest_id).scalar()
-        db.session.commit()
-
-        return redirect(url_for('manifest_detail', manifest_id=manifest_id))
-
-    return render_template('edit_stop.html', stop=stop, manifest_id=manifest_id, active_page='drivers')
+    return render_template("edit_stop.html", stop=stop, manifest_id=manifest_id)
 
 
 @app.route('/stops/<int:stop_id>/delete', methods=['POST'])
@@ -258,7 +262,7 @@ def zip_lookup(zip_code):
     zone_entry = ZipZone.query.filter_by(zip_code=zip_code).first()
     if zone_entry:
         return jsonify({
-            'miles': zone_entry.miles,
+            'miles': zone_entry.miles_from_warehouse,
             'zone': zone_entry.zone
         })
     return jsonify({'miles': '', 'zone': ''})
