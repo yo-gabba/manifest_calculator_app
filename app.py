@@ -11,6 +11,7 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'manifest.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = "gabbifer98"
 
 # Initialize the database with app
 db.init_app(app)
@@ -180,16 +181,19 @@ def add_stop(manifest_id):
 
     # Try to look up miles + zone from ZipZone
     zone_entry = ZipZone.query.filter_by(zip_code=zip_code).first()
-    if zone_entry:
-        miles = zone_entry.miles_from_warehouse
-        zone = zone_entry.zone
-    else:
-        miles = float(request.form.get('miles', 0))
-        zone = None  # will be set by calculate_stop_total
+
+    if not zone_entry:
+        # ZIP not found → prompt user to add it
+        flash(f"ZIP {zip_code} not found in database. Please add miles and zone first.")
+        return redirect(url_for('add_zip', zip_code=zip_code, manifest_id=manifest_id))
+    
+    # ZIP found → use its values
+    miles = zone_entry.miles_from_warehouse
+    zone = zone_entry.zone
 
     # Calculate freight/total with given or looked-up miles
-    freight_total, total, calc_zone = calculate_stop_total(miles, pallet_spaces, accessorials)
-    zone = zone or calc_zone  # prefer DB zone, otherwise use calculated
+    freight_total, total, calc_zone= calculate_stop_total(miles, pallet_spaces, accessorials)
+    zone = zone or calc_zone
 
     stop = Stop(
         manifest_id=manifest_id,
@@ -231,10 +235,9 @@ def edit_stop(stop_id, manifest_id):
         if not stop.zone:
             stop.miles = request.form.get("miles", 0)
 
-        # Recalculate rate + total (assuming you have a helper for this)
-        # Example:
-        stop.rate, stop.total = calculate_rate_and_total(
-            stop.zone, stop.pallets, stop.pallet_spaces, stop.miles, stop.accessorials
+        # Recalculate rate + total
+        stop.rate, stop.total, stop.zone = calculate_stop_total(
+            stop.miles, stop.pallet_spaces, stop.accessorials
         )
 
         db.session.commit()
@@ -266,6 +269,34 @@ def zip_lookup(zip_code):
             'zone': zone_entry.zone
         })
     return jsonify({'miles': '', 'zone': ''})
+
+@app.route('/zip/add', methods=['GET', 'POST'])
+def add_zip():
+    if request.method == 'POST':
+        zip_code = request.form['zip_code'].strip()
+        miles = float(request.form['miles'])
+        zone = request.form['zone'].strip().upper()
+
+        new_zip = ZipZone(
+            zip_code=zip_code,
+            miles_from_warehouse=miles,
+            zone=zone
+        )
+        db.session.add(new_zip)
+        db.session.commit()
+
+        flash(f"ZIP {zip_code} added successfully.")
+        # Redirect back to the manifest that triggered this
+        manifest_id = request.form.get('manifest_id')
+        if manifest_id:
+            return redirect(url_for('manifest_detail', manifest_id=manifest_id))
+        return redirect(url_for('drivers'))
+
+    # GET → render form
+    zip_code = request.args.get('zip_code', '')
+    manifest_id = request.args.get('manifest_id', None)
+    return render_template('add_zip.html', zip_code=zip_code, manifest_id=manifest_id)
+
 
 
 
