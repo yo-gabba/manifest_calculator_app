@@ -1,6 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Reports</h2>
-<p>Generate daily, weekly, or monthly reports here.</p>
-<button>Export CSV</button>
+
+<div class="container">
+  <h1>Reports</h1>
+  <p>View and export manifests by date range, driver, or time period.</p>
+
+  <!-- Filter Section -->
+  <div class="filters">
+    <form method="GET" action="{{ url_for('reports') }}">
+      <label for="start_date">From:</label>
+      <input type="date" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+
+      <label for="end_date">To:</label>
+      <input type="date" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+
+      <label for="driver">Driver:</label>
+      <select name="driver" id="driver">
+        <option value="">All Drivers</option>
+        {% for driver in drivers %}
+            <option value="{{ driver.id }}"
+            {% if request.args.get('driver') == driver.id|string %}selected{% endif %}>
+            {{ driver.name }}
+            </option>
+        {% endfor %}
+        </select>
+
+
+
+      <button type="submit">Filter</button>
+      <button type="button" onclick="window.print()">🖨️ Print</button>
+    </form>
+  </div>
+
+  <!-- Reports Table -->
+  <div class="report-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Driver</th>
+          <th>Stops</th>
+          <th>Pallets</th>
+          <th>Miles</th>
+          <th>Earnings ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for manifest in manifests %}
+        <tr>
+          <td>{{ manifest.date }}</td>
+          <td>{{ manifest.driver_name }}</td>
+          <td>{{ manifest.stops }}</td>
+          <td>{{ manifest.pallets }}</td>
+          <td>{{ manifest.miles }}</td>
+          <td>${{ "%.2f"|format(manifest.earnings) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="totals">
+          <td colspan="2"><strong>Totals</strong></td>
+          <td>{{ totals.stops }}</td>
+          <td>{{ totals.pallets }}</td>
+          <td>{{ totals.miles }}</td>
+          <td>${{ "%.2f"|format(totals.earnings) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
 {% endblock %}

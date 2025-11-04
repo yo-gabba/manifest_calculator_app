@@ -349,7 +349,56 @@ def add_zip():
 
 @app.route('/reports')
 def reports():
-    return render_template('reports.html', active_page='reports')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    driver_id = request.args.get('driver')
+
+    query = Manifest.query.join(Driver).order_by(Manifest.date.asc())
+
+    if start_date:
+        query = query.filter(Manifest.date >= start_date)
+    if end_date:
+        query = query.filter(Manifest.date <= end_date)
+    if driver_id:
+        query = query.filter(Manifest.driver_id == driver_id)
+
+    manifests = query.all()
+
+    manifest_data = []
+    for m in manifests:
+        total_stops = len(m.stops)
+        total_pallets = sum(stop.pallets for stop in m.stops)
+        total_miles = m.total_miles or 0
+        total_earnings = m.day_total or 0.0
+
+        manifest_data.append({
+            'date': m.date,
+            'driver_name': m.driver.name,
+            'stops': total_stops,
+            'pallets': total_pallets,
+            'miles': total_miles,
+            'earnings': total_earnings
+        })
+
+    # Initialize totals to avoid UndefinedError
+    totals = {
+        'stops': 0,
+        'pallets': 0,
+        'miles': 0,
+        'earnings': 0.0
+    }
+
+    if manifest_data:
+        totals = {
+            'stops': sum(d['stops'] for d in manifest_data),
+            'pallets': sum(d['pallets'] for d in manifest_data),
+            'miles': sum(d['miles'] for d in manifest_data),
+            'earnings': sum(d['earnings'] for d in manifest_data)
+        }
+
+    drivers = Driver.query.order_by(Driver.name).all()
+    return render_template('reports.html', manifests=manifest_data, totals=totals, drivers=drivers)
+
 
 
 @app.route('/logout')

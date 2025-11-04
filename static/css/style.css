@@ -95,3 +95,57 @@ h2 {
     border-radius: 4px;
     font-size: 0.9em;
 }
+
+.filters {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.filters form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.filters label {
+  font-weight: bold;
+}
+
+.filters input, 
+.filters select, 
+.filters button {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.report-table th, 
+.report-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.report-table th {
+  background: #242148;
+  color: white;
+}
+
+.report-table tfoot {
+  background: #f1f1f1;
+  font-weight: bold;
+}
+
