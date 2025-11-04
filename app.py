@@ -100,7 +100,54 @@ def calculate_stop_total(miles, pallet_spaces, accessorials=''):
 # ROUTES 
 @app.route('/')
 def index():
-    return render_template('index.html', active_page='dashboard')
+    today = datetime.today().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
+
+    # Get all manifests
+    manifests = Manifest.query.all()
+
+    # Filters
+    daily_manifests = [m for m in manifests if m.date == today]
+    weekly_manifests = [m for m in manifests if start_of_week <= m.date <= today]
+    monthly_manifests = [m for m in manifests if start_of_month <= m.date <= today]
+
+    def calc_totals(manifest_list):
+        stop_ids = [s.id for m in manifest_list for s in m.stops]
+        if not stop_ids:
+            return {'stops': 0, 'pallets': 0, 'miles': 0, 'money': 0.0}
+        stops = Stop.query.filter(Stop.id.in_(stop_ids)).all()
+        return {
+            'stops': len(stops),
+            'pallets': sum(s.pallets or 0 for s in stops),
+            'miles': sum(m.total_miles or 0 for m in manifest_list),
+            'money': sum(s.total or 0 for s in stops)
+        }
+
+    totals = {
+        'day': calc_totals(daily_manifests),
+        'week': calc_totals(weekly_manifests),
+        'month': calc_totals(monthly_manifests)
+    }
+
+    # Totals per driver (for chart)
+    driver_data = (
+        db.session.query(Driver.name, func.sum(Manifest.day_total))
+        .join(Manifest)
+        .group_by(Driver.name)
+        .all()
+    )
+
+    driver_names = [d[0] for d in driver_data]
+    driver_totals = [round(d[1] or 0, 2) for d in driver_data]
+
+    return render_template(
+        'index.html',
+        totals=totals,
+        driver_names=driver_names,
+        driver_totals=driver_totals,
+        active_page='dashboard'
+        )
 
 @app.context_processor
 def inject_drivers():

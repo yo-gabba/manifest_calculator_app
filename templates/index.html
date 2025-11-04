@@ -1,10 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Totals of All Drivers</h2>
+<h2>Dashboard Overview</h2>
+
 <div class="cards">
-  <div class="card">Day Total: $0</div>
-  <div class="card">Week Total: $0</div>
-  <div class="card">Month Total: $0</div>
-  <div class="card">Year Total: $0</div>
+  <div class="card">
+    <h3>Today's Totals</h3>
+    <p><strong>Stops:</strong> {{ totals.day.stops }}</p>
+    <p><strong>Pallets:</strong> {{ totals.day.pallets }}</p>
+    <p><strong>Miles:</strong> {{ totals.day.miles }}</p>
+    <p><strong>Revenue:</strong> ${{ "%.2f"|format(totals.day.money) }}</p>
+  </div>
+
+  <div class="card">
+    <h3>This Week</h3>
+    <p><strong>Stops:</strong> {{ totals.week.stops }}</p>
+    <p><strong>Pallets:</strong> {{ totals.week.pallets }}</p>
+    <p><strong>Miles:</strong> {{ totals.week.miles }}</p>
+    <p><strong>Revenue:</strong> ${{ "%.2f"|format(totals.week.money) }}</p>
+  </div>
+
+  <div class="card">
+    <h3>This Month</h3>
+    <p><strong>Stops:</strong> {{ totals.month.stops }}</p>
+    <p><strong>Pallets:</strong> {{ totals.month.pallets }}</p>
+    <p><strong>Miles:</strong> {{ totals.month.miles }}</p>
+    <p><strong>Revenue:</strong> ${{ "%.2f"|format(totals.month.money) }}</p>
+  </div>
 </div>
+
+<h2 style="margin-top: 40px;">Earnings by Driver</h2>
+<div class="chart-container">
+  <canvas id="driverChart"></canvas>
+</div>
+
+<!-- Pass data safely -->
+<script id="driverData" type="application/json">
+  {
+    "names": {{ driver_names | tojson }},
+    "totals": {{ driver_totals | tojson }}
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Get data from JSON script tag
+    const chartData = JSON.parse(document.getElementById('driverData').textContent);
+
+    const ctx = document.getElementById('driverChart');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.names,
+        datasets: [{
+          label: 'Total Earnings ($)',
+          data: chartData.totals,
+          borderWidth: 1,
+          backgroundColor: 'rgba(36, 33, 72, 0.8)',
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Earnings ($)'
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
 {% endblock %}
