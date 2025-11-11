@@ -1,33 +1,102 @@
-My Awesome Project
+# Logistics Manifest Calculator & Reporting Tool
 
-Write a short sentence or two about this project and what it does. Be sure to include a link and a screenshot (we're front end devs so we can actually see our work!).
+A full-stack web application designed for logistics and trucking companies to track, calculate, and analyze delivery manifests.
+Built with Flask, SQLite, and JavaScript, this tool streamlines driver management, automates rate calculations, and provides data-driven insights through visual dashboards and printable reports.
 
-Link to project: http://recruiters-love-seeing-live-demos.com/
+# Features
 
-alt tag
+Driver & Manifest Management:
 
-How It's Made:
+>Add and manage multiple drivers, manifests, and delivery stops.
 
-Tech used: HTML, CSS, JavaScript, Framework of choice
+>Automatically calculates miles, pallets, and daily totals.
 
-Here's where you can go to town on how you actually built this thing. Write as much as you can here, it's totally fine if it's not too much just make sure you write something. If you don't have too much experience on your resume working on the front end that's totally fine. This is where you can really show off your passion and make up for that ten fold.
+Automated Calculations:
 
-Optimizations
+>Built-in logic for zone-based pricing and pallet/stop/accessorial rates.
 
-(optional)
+Dashboard Overview:
 
-You don't have to include this section but interviewers love that you can not only deliver a final product that looks great but also functions efficiently. Did you write something then refactor it later and the result was 5x faster than the original implementation? Did you cache your assets? Things that you write in this section are GREAT to bring up in interviews and you can use this section as reference when studying for technical interviews!
+>Displays total miles, stops, pallets, and earnings for the day, week, or month.
 
-Lessons Learned:
+>Includes Chart.js bar charts for easy visual insights.
 
-No matter what your experience level, being an engineer means continuously learning. Every time you build something you always have those whoa this is awesome or wow I actually did it! moments. This is where you should share those moments! Recruiters and interviewers love to see that you're self-aware and passionate about growing.
+Reports Page:
 
-Examples:
+>Filter and print reports by driver or date range (daily, weekly, monthly).
 
-Take a look at these couple examples that I have in my own portfolio:
+Database Integration:
 
-Palettable: https://github.com/alecortega/palettable
+>Uses SQLite with SQLAlchemy ORM for relational data between drivers, manifests, stops, and zones.
 
-Twitter Battle: https://github.com/alecortega/twitter-battle
+Future-Ready Architecture:
+>Designed to scale with user authentication and individual driver logins.
 
-Patch Panel: https://github.com/alecortega/patch-panel
+# Tech Stack
+
+```python
+Category	        Tools
+
+Backend 	        Python, Flask, SQLAlchemy
+
+Frontend	        HTML, CSS, JavaScript, Chart.js
+
+Database	        SQLite
+
+Deployment	        Render
+
+Version Control	    Git & GitHub
+
+```
+
+# Installation & Setup
+1. Clone the repository
+
+        git clone https://github.com/yo-gabba/manifest_calculator_app.git
+        cd manifest_calculator_app
+
+2. Create a virtual environment
+
+        python3 -m venv venv
+        source venv/bin/activate   # Mac/Linux
+        venv\Scripts\activate      # Windows
+
+3. Install dependencies
+
+        pip install -r requirements.txt
+
+4. Initialize the database
+
+        python init_db.py
+
+5. Run the app
+
+        flask run
+
+The app will be available at http://127.0.0.1:5000/
+
+# Usage
+
+Access the dashboard to view daily, weekly, or monthly metrics.
+
+Navigate to the Reports page to filter manifests by driver or date range.
+
+Export or print reports as needed.
+
+Admins can later add new drivers and manage rate structures directly through the interface.
+
+# Future Enhancements
+Driver authentication and personal dashboards
+
+PDF/CSV export functionality for reports
+
+Integration with GPS or mileage tracking systems
+
+Cloud database migration (PostgreSQL)
+
+# Author
+Gabriela Alcala
+Software Engineer | Developer | Web Designer
+
+📧 gabby9295@gmail.com
+🔗 https://yo-gabba.github.io/portfolio/
